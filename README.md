@@ -5,6 +5,7 @@
 Add functionality to our existing Budget Tracker application to allow for offline access and functionality.
 The user will be able to add expenses and deposits to their budget with or without a connection. When entering transactions offline, they should populate the total when brought back online.
 <br>
+<br>
 Offline Functionality:
 
 <ul>
@@ -39,9 +40,7 @@ THEN that will be shown on the page, and added to their transaction history when
 The user will be able to add expenses and deposits to their budget with or without a connection. When entering transactions offline, they should populate the total when brought back online.
 
 # Links
-Repository: https://github.com/Tpoppp77/budget-track-fast
-<br>
-Deployed:
+Deployed: https://dry-journey-61849.herokuapp.com/
 
 # Technologies Used
 <ul> 
