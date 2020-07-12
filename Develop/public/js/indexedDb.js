@@ -6,14 +6,16 @@ export function checkForIndexedDb() {
     return true;
   }
   
-  export function useIndexedDb(databaseName, budget, method, object) {
+  export function useIndexedDb(databaseName, storeName, method, object) {
     return new Promise((resolve, reject) => {
       const request = window.indexedDB.open(databaseName, 1);
-      let db;
+      let db,
+      tx,
+      store;
   
       request.onupgradeneeded = function(e) {
         const db = request.result;
-        db.createObjectStore(budget, { keyPath: "_id" });
+        db.createObjectStore(storeName, { keyPath: "_id" });
       };
   
       request.onerror = function(e) {
@@ -35,9 +37,7 @@ export function checkForIndexedDb() {
           all.onsuccess = function() {
             resolve(all.result);
           };
-        } else if (method === "delete") {
-          store.delete(object._id);
-        }
+        } 
         tx.oncomplete = function() {
           db.close();
         };
