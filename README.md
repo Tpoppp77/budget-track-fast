@@ -1,4 +1,4 @@
-# budget-track-fast
+# budget-fast-track
 
 # Functionality
 

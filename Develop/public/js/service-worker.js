@@ -1,95 +1,56 @@
 const FILES_TO_CACHE = [
     '/',
-    '/index.html',
+    '/index.js',
     '/styles.css',
-    '/dist/manifest.json',
-    '/dist/bundle.js',
-    '/dist/icon_72x72.png',
-    '/dist/icon_96x96.png',
-    '/dist/icon_128x128.png',
-    '/dist/icon_144x144.png',
-    '/dist/icon_152x152.png',
-    '/dist/icon_192x192.png',
-    '/dist/icon_384x384.png',
-    '/dist/icon_512x512.png',
+    '/manifest.json',
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
+    'indexedDb.js'
 ]
 
-const STATIC_CACHE = "static-cache-v1";
-const RUNTIME_CACHE = "runtime-cache";
+const CACHE_NAME = 'my-site-cache-v1';
 
-self.addEventListener("install", (event) => {
+self.addEventListener('install', function(event) {
+  console.log('Service Worker: Installed');
+  // Perform install steps
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then(function(cache) {
+        console.log('Service Worker: Caching Files');
+        cache.addAll(urlsToCache);
+      })
+      .then(() => self.skipWaiting())
+  );
+});
 
-    event.waitUntil(
+self.addEventListener('activate', event => {
+  console.log('Service Worker: Activated');
+  event.waitUntil(
+    caches.keys().then(keyList => {
+      return Promise.all(
+        keyList.map(key => {
+          if (key !== CACHE_NAME) {
+            console.log('Removing old cache data', key);
+            return caches.delete(key);
+          }
+        })
+      );
+    })
+  );
+});
 
-        caches.open(STATIC_CACHE)
-            .then(cache => cache.addAll(FILES_TO_CACHE))
-
-            .then(() => self.skipWaiting())
-    )
-})
-
-self.addEventListener("activate", (event) => {
-    const currentCaches = [STATIC_CACHE, RUNTIME_CACHE];
-
-    event.waitUntil(
-
-        caches
-            .keys()
-            .then(cacheNames => {
-
-                return cacheNames.filter(name => !currentCaches.includes(name))
-            })
-            .then(cachesToDelete => {
-
-                return Promise.all(cachesToDelete.map(name => caches.delete(name)))
-            })
-            .then(() => self.clients.claim())
-    )
-})
-
-self.addEventListener("fetch", (event) => {
-    if (
-        event.request.method !== "GET" ||
-        !event.request.url.startsWith(self.location.origin)
-    ) {
-        event.respondWith(fetch(event.request));
-        return;
-    }
-
-    if (event.request.url.includes("/api/")) {
-        event.respondWith(
-            caches
-                .open(RUNTIME_CACHE)
-                .then(cache => {
-                    return fetch(event.request)
-                        .then(response => {
-
-                            cache.put(event.request, response.clone());
-
-                            return response;
-                        })
-
-                        .catch(() => caches.match(event.request));
-                })
-        );
-
-        return;
-    }
-
-    event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
-                if (cachedResponse) {
-                    return cachedResponse
-                }
-                caches
-                    .open(RUNTIME_CACHE)
-                    .then(response => {
-                        return response || fetch(event.request)
-                    })
-            })
-    )
-
-})
+self.addEventListener('fetch', function(event) {
+  console.log('Service Worker: Fetching');
+  event.respondWith(
+    fetch(event.request).catch(function() {
+      return caches.match(event.request).then(function(response) {
+        if (response) {
+          return response;
+        } else if (event.request.headers.get('accept').includes('text/html')) {
+          return caches.match('/index.html');
+        }
+      });
+    })
+  );
+});
